@@ -11,6 +11,31 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
 
     let pings: PingResults = { unit: "s", results: [] };
     let iperf: IperfResults = { unit: "bit/s", results: [] };
+    const benchmarks: Benchmark[] = [];
+
+    // Generate timestamped filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const timestampedFile = `./benchmark-results-${timestamp}.json`;
+
+    // Helper to save current results
+    const saveResults = () => {
+        const benchmarkResults: BenchmarkResults = {
+            benchmarks,
+            pings,
+            iperf,
+        };
+        // Save both timestamped and standard files
+        fs.writeFileSync(timestampedFile, JSON.stringify(benchmarkResults, null, 2));
+        fs.writeFileSync('./benchmark-results.json', JSON.stringify(benchmarkResults, null, 2));
+        console.error(`Results saved to ${timestampedFile} and benchmark-results.json`);
+    };
+
+    // Save partial results on interrupt
+    process.on('SIGINT', () => {
+        console.error('\n\nInterrupted! Saving partial results...');
+        saveResults();
+        process.exit(130);
+    });
     
     try {
         pings = runPing(clientPublicIP, serverPublicIP, testing);
@@ -31,8 +56,8 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
     copyAndBuildPerfImplementations(serverPublicIP, implsToBuild);
     copyAndBuildPerfImplementations(clientPublicIP, implsToBuild);
 
-    const benchmarks = [
-        runBenchmarkAcrossVersions({
+    try {
+        benchmarks.push(runBenchmarkAcrossVersions({
             name: "throughput/upload",
             clientPublicIP,
             serverPublicIP,
@@ -41,8 +66,9 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
             unit: "bit/s",
             iterations,
             durationSecondsPerIteration: testing ? 5 : 20,
-        }, versionsToRun),
-        runBenchmarkAcrossVersions({
+        }, versionsToRun));
+        
+        benchmarks.push(runBenchmarkAcrossVersions({
             name: "throughput/download",
             clientPublicIP,
             serverPublicIP,
@@ -51,8 +77,9 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
             unit: "bit/s",
             iterations,
             durationSecondsPerIteration: testing ? 5 : 20,
-        }, versionsToRun),
-        runBenchmarkAcrossVersions({
+        }, versionsToRun));
+        
+        benchmarks.push(runBenchmarkAcrossVersions({
             name: "Connection establishment + 1 byte round trip latencies",
             clientPublicIP,
             serverPublicIP,
@@ -61,17 +88,11 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
             unit: "s",
             iterations: testing ? 1 : 100,
             durationSecondsPerIteration: Number.MAX_SAFE_INTEGER,
-        }, versionsToRun),
-    ];
-
-    const benchmarkResults: BenchmarkResults = {
-        benchmarks,
-        pings,
-        iperf,
-    };
-
-    // Save results to benchmark-results.json
-    fs.writeFileSync('./benchmark-results.json', JSON.stringify(benchmarkResults, null, 2));
+        }, versionsToRun));
+    } finally {
+        // Always save results, even on failure
+        saveResults();
+    }
 
     console.error("== done");
 }
