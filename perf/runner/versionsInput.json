@@ -45,6 +45,13 @@
     ]
   },
   {
+    "id": "webrtc-node-datachannel",
+    "implementation": "js-libp2p",
+    "transportStacks": [
+      "webrtc-direct"
+    ]
+  },
+  {
     "id": "webrtc-roamhq-wrtc",
     "implementation": "js-libp2p",
     "transportStacks": [
