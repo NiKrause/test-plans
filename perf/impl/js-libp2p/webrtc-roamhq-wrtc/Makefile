@@ -4,7 +4,7 @@ DOCKER_RUN := docker run --rm -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp
 all: perf
 
 perf:
-	@echo "Dependencies pre-installed via GitHub reference"
+	$(DOCKER_RUN) npm ci
 
 clean:
 	rm -rf node_modules
