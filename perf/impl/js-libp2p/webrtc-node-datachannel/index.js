@@ -87,7 +87,7 @@ export async function main (runServer, serverAddress, transport, uploadBytes, do
     // Write all listen multiaddrs to file for runner to capture
     // Using file approach is more reliable than stderr redirection through perf wrapper
     for (const ma of node.getMultiaddrs()) {
-      fs.appendFileSync('/tmp/webrtc-listen-addrs.txt', `${ma.toString()}\n`)
+      fs.appendFileSync('/tmp/webrtc-listen-addrs.txt', `[LISTEN_ADDR] ${ma.toString()}\n`)
       // eslint-disable-next-line no-console
       console.error(`[LISTEN_ADDR] ${ma.toString()}`)
     }
