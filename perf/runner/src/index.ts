@@ -9,8 +9,20 @@ async function main(clientPublicIP: string, serverPublicIP: string, testing: boo
 
     console.error(`= Starting benchmark with ${iterations} iterations on implementations ${testFilter}`);
 
-    const pings = runPing(clientPublicIP, serverPublicIP, testing);
-    const iperf = runIPerf(clientPublicIP, serverPublicIP, testing);
+    let pings: PingResults = { unit: "s", results: [] };
+    let iperf: IperfResults = { unit: "bit/s", results: [] };
+    
+    try {
+        pings = runPing(clientPublicIP, serverPublicIP, testing);
+    } catch (error) {
+        console.error('Warning: Ping test failed:', (error as Error).message);
+    }
+    
+    try {
+        iperf = runIPerf(clientPublicIP, serverPublicIP, testing);
+    } catch (error) {
+        console.error('Warning: iPerf test failed:', (error as Error).message);
+    }
 
     const versionsToRun = versions.filter(version => testFilter.includes('all') || testFilter.includes(version.implementation))
 
@@ -68,7 +80,7 @@ function runPing(clientPublicIP: string, serverPublicIP: string, testing: boolea
     const pingCount = testing ? 1 : 100;
     console.error(`= run ${pingCount} pings from client to server`);
 
-    const cmd = `ssh -o StrictHostKeyChecking=no ec2-user@${clientPublicIP} 'ping -c ${pingCount} ${serverPublicIP}'`;
+    const cmd = `ssh -o StrictHostKeyChecking=no root@${clientPublicIP} 'ping -c ${pingCount} ${serverPublicIP}'`;
     const stdout = execCommand(cmd).toString();
 
     // Extract the time from each ping
@@ -87,15 +99,15 @@ function runIPerf(clientPublicIP: string, serverPublicIP: string, testing: boole
     const iPerfIterations = testing ? 1 : 60;
     console.error(`= run ${iPerfIterations} iPerf TCP from client to server`);
 
-    const killCMD = `ssh -o StrictHostKeyChecking=no ec2-user@${serverPublicIP} 'kill $(cat pidfile); rm pidfile; rm server.log || true'`;
+    const killCMD = `ssh -o StrictHostKeyChecking=no root@${serverPublicIP} 'kill $(cat pidfile); rm pidfile; rm server.log || true'`;
     const killSTDOUT = execCommand(killCMD);
     console.error(killSTDOUT);
 
-    const serverCMD = `ssh -o StrictHostKeyChecking=no ec2-user@${serverPublicIP} 'nohup iperf3 -s > server.log 2>&1 & echo \$! > pidfile '`;
+    const serverCMD = `ssh -o StrictHostKeyChecking=no root@${serverPublicIP} 'nohup iperf3 -s > server.log 2>&1 & echo \$! > pidfile '`;
     const serverSTDOUT = execCommand(serverCMD);
     console.error(serverSTDOUT);
 
-    const cmd = `ssh -o StrictHostKeyChecking=no ec2-user@${clientPublicIP} 'iperf3 -c ${serverPublicIP} -t ${iPerfIterations} -N'`;
+    const cmd = `ssh -o StrictHostKeyChecking=no root@${clientPublicIP} 'iperf3 -c ${serverPublicIP} -t ${iPerfIterations} -N'`;
     const stdout = execSync(cmd).toString();
 
     // Extract the bitrate from each relevant line
@@ -138,18 +150,36 @@ function runBenchmarkAcrossVersions(args: ArgsRunBenchmarkAcrossVersions, versio
 
         console.error(`=== Starting server ${version.implementation}/${version.id}`);
 
-        const killCMD = `ssh -o StrictHostKeyChecking=no ec2-user@${args.serverPublicIP} 'kill $(cat pidfile); rm pidfile; rm server.log || true'`;
+        const killCMD = `ssh -o StrictHostKeyChecking=no root@${args.serverPublicIP} 'kill $(cat pidfile); rm pidfile; rm server.log; rm /tmp/webrtc-listen-addrs.txt || true'`;
         const killSTDOUT = execCommand(killCMD);
         console.error(killSTDOUT);
 
-        const serverCMD = `ssh -o StrictHostKeyChecking=no ec2-user@${args.serverPublicIP} 'nohup ./impl/${version.implementation}/${version.id}/perf --run-server --server-address 0.0.0.0:4001 > server.log 2>&1 & echo \$! > pidfile '`;
+        // For WebRTC Direct, we need to pass the transport to the server
+        // Note: Current published @libp2p/webrtc binds to 127.0.0.1 when given a specific IP,
+        // so we use 0.0.0.0 and replace 127.0.0.1 with the public IP when capturing the address
+        const serverBindAddr = '0.0.0.0';
+        const transportParam = version.transportStacks.includes('webrtc-direct') ? ' --transport webrtc-direct' : '';
+        const serverCMD = `ssh -o StrictHostKeyChecking=no root@${args.serverPublicIP} 'nohup ./impl/${version.implementation}/${version.id}/perf --run-server --server-address ${serverBindAddr}:4001${transportParam} > server.log 2>&1 & echo \$! > pidfile '`;
         const serverSTDOUT = execCommand(serverCMD);
         console.error(serverSTDOUT);
+
+        // Wait for server to be ready and capture listen address for WebRTC Direct
+        let serverListenAddr: string | undefined;
+        for (const transportStack of version.transportStacks) {
+            if (transportStack === 'webrtc-direct') {
+                // Give server time to start and print listen address
+                console.error(`=== Waiting for WebRTC Direct server listen address...`);
+                execCommand(`sleep 2`);
+                serverListenAddr = getWebRTCDirectListenAddr(args.serverPublicIP);
+                console.error(`=== Captured server listen address: ${serverListenAddr}`);
+            }
+        }
 
         for (const transportStack of version.transportStacks) {
             const result = runClient({
                 clientPublicIP: args.clientPublicIP,
                 serverPublicIP: args.serverPublicIP,
+                serverListenAddr: serverListenAddr,
                 id: version.id,
                 implementation: version.implementation,
                 transportStack: transportStack,
@@ -182,7 +212,7 @@ function runBenchmarkAcrossVersions(args: ArgsRunBenchmarkAcrossVersions, versio
 interface ArgsRunBenchmark {
     clientPublicIP: string;
     serverPublicIP: string;
-    serverAddress?: string;
+    serverListenAddr?: string;
     id: string,
     implementation: string,
     transportStack: string,
@@ -195,11 +225,16 @@ interface ArgsRunBenchmark {
 function runClient(args: ArgsRunBenchmark): ResultValue[] {
     console.error(`=== Starting client ${args.implementation}/${args.id}/${args.transportStack}`);
 
-    const cmd = `./impl/${args.implementation}/${args.id}/perf --server-address ${args.serverPublicIP}:4001 --transport ${args.transportStack} --upload-bytes ${args.uploadBytes} --download-bytes ${args.downloadBytes}`
+    // For WebRTC Direct, use the captured listen multiaddr; otherwise use host:port
+    const serverAddress = args.transportStack === 'webrtc-direct' && args.serverListenAddr
+        ? args.serverListenAddr
+        : `${args.serverPublicIP}:4001`;
+
+    const cmd = `./impl/${args.implementation}/${args.id}/perf --server-address ${serverAddress} --transport ${args.transportStack} --upload-bytes ${args.uploadBytes} --download-bytes ${args.downloadBytes}`
     // Note 124 is timeout's exit code when timeout is hit which is not a failure here.
     const withTimeout = `timeout ${args.durationSecondsPerIteration}s ${cmd} || [ $? -eq 124 ]`
     const withForLoop = `for i in {1..${args.iterations}}; do ${withTimeout}; done`
-    const withSSH = `ssh -o StrictHostKeyChecking=no ec2-user@${args.clientPublicIP} '${withForLoop}'`
+    const withSSH = `ssh -o StrictHostKeyChecking=no root@${args.clientPublicIP} '${withForLoop}'`
 
     const stdout = execCommand(withSSH);
 
@@ -232,13 +267,34 @@ function execCommand(cmd: string): string {
     }
 }
 
+/**
+ * Extracts the WebRTC Direct listen multiaddr from the /tmp/webrtc-listen-addrs.txt file.
+ * The server prints lines like: [LISTEN_ADDR] /ip4/x.x.x.x/udp/4001/webrtc-direct/certhash/.../p2p/...
+ * Note: Replaces 127.0.0.1 with the actual public IP since current @libp2p/webrtc binds to localhost.
+ */
+function getWebRTCDirectListenAddr(serverPublicIP: string): string {
+    const cmd = `ssh -o StrictHostKeyChecking=no root@${serverPublicIP} 'cat /tmp/webrtc-listen-addrs.txt 2>/dev/null | grep "\[LISTEN_ADDR\]" | tail -1'`;
+    const stdout = execCommand(cmd).trim();
+    
+    // Extract the multiaddr from the log line
+    const match = stdout.match(/\[LISTEN_ADDR\]\s+(\/ip[46]\/[^\s]+)/);
+    if (!match || !match[1]) {
+        console.error(`Failed to extract listen address. Output: ${stdout}`);
+        throw new Error('Could not find WebRTC Direct listen address in /tmp/webrtc-listen-addrs.txt');
+    }
+    
+    // Replace 127.0.0.1 with the actual public IP
+    const multiaddr = match[1].replace('/ip4/127.0.0.1/', `/ip4/${serverPublicIP}/`);
+    return multiaddr;
+}
+
 function copyAndBuildPerfImplementations(ip: string, impls: string) {
     console.error(`= Building implementations for ${impls} on ${ip}`);
 
-    const stdout = execCommand(`rsync -avz --progress --filter=':- .gitignore' -e "ssh -o StrictHostKeyChecking=no" ../impl ec2-user@${ip}:/home/ec2-user`);
+    const stdout = execCommand(`rsync -avz --progress --exclude='node_modules' --filter=':- .gitignore' -e "ssh -o StrictHostKeyChecking=no" ../impl root@${ip}:/root`);
     console.error(stdout.toString());
 
-    const stdout2 = execCommand(`ssh -o StrictHostKeyChecking=no ec2-user@${ip} 'cd impl && make ${impls}'`);
+    const stdout2 = execCommand(`ssh -o StrictHostKeyChecking=no root@${ip} 'cd impl && make ${impls}'`);
     console.error(stdout2.toString());
 }
 

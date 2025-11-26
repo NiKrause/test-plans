@@ -43,5 +43,12 @@
     "transportStacks": [
       "tcp"
     ]
+  },
+  {
+    "id": "webrtc-roamhq-wrtc",
+    "implementation": "js-libp2p",
+    "transportStacks": [
+      "webrtc-direct"
+    ]
   }
 ]
