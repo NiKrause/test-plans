@@ -1,0 +1,143 @@
+
+> runner@1.0.0 start
+> ts-node src/index.ts --client-public-ip 46.224.73.91 --server-public-ip 188.245.187.195 --test-filter js-libp2p --testing
+
+= Starting benchmark with 1 iterations on implementations js-libp2p
+= run 1 pings from client to server
+= run 1 iPerf TCP from client to server
+bash: line 1: kill: (20833) - No such process
+
+
+iperf3: error - unable to send control message: Bad file descriptor
+Warning: iPerf test failed: Command failed: ssh -o StrictHostKeyChecking=no root@46.224.73.91 'iperf3 -c 188.245.187.195 -t 1 -N'
+iperf3: error - unable to send control message: Bad file descriptor
+
+= Building implementations for js-libp2p on 188.245.187.195
+Transfer starting: 46 files
+impl/js-libp2p/webrtc-roamhq-wrtc/
+impl/js-libp2p/webrtc-roamhq-wrtc/package-lock.json
+          46228 100%   13.11MB/s   00:00:00 (xfer#1, to-check=35/46)
+impl/js-libp2p/webrtc-roamhq-wrtc/package.json
+            471 100%    1.66MB/s   00:00:00 (xfer#2, to-check=36/46)
+
+sent 11187 bytes  received 2146 bytes  76145 bytes/sec
+total size is 456386  speedup is 34.23
+
+npm notice
+npm notice New major version of npm available! 10.9.4 -> 11.6.4
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+npm notice To update run: npm install -g npm@11.6.4
+npm notice
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm notice
+npm notice New major version of npm available! 10.9.4 -> 11.6.4
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+npm notice To update run: npm install -g npm@11.6.4
+npm notice
+make -C js-libp2p/v2.8/.
+make[1]: Entering directory '/root/impl/js-libp2p/v2.8'
+docker run --rm -v "/root/impl/js-libp2p/v2.8":/usr/src/myapp -w /usr/src/myapp node:22-alpine npm ci
+
+added 93 packages, and audited 94 packages in 4s
+
+15 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+make[1]: Leaving directory '/root/impl/js-libp2p/v2.8'
+make -C js-libp2p/webrtc-node-datachannel/.
+make[1]: Entering directory '/root/impl/js-libp2p/webrtc-node-datachannel'
+docker run --rm -v "/root/impl/js-libp2p/webrtc-node-datachannel":/usr/src/myapp -w /usr/src/myapp node:22-alpine npm ci
+
+added 474 packages, and audited 475 packages in 16s
+
+48 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+make[1]: Leaving directory '/root/impl/js-libp2p/webrtc-node-datachannel'
+make -C js-libp2p/webrtc-roamhq-wrtc/.
+make[1]: Entering directory '/root/impl/js-libp2p/webrtc-roamhq-wrtc'
+Dependencies pre-installed via GitHub reference
+make[1]: Leaving directory '/root/impl/js-libp2p/webrtc-roamhq-wrtc'
+
+= Building implementations for js-libp2p on 46.224.73.91
+Transfer starting: 46 files
+impl/js-libp2p/webrtc-roamhq-wrtc/
+impl/js-libp2p/webrtc-roamhq-wrtc/package-lock.json
+          46228 100%   13.32MB/s   00:00:00 (xfer#1, to-check=35/46)
+impl/js-libp2p/webrtc-roamhq-wrtc/package.json
+            471 100%    1.90MB/s   00:00:00 (xfer#2, to-check=36/46)
+
+sent 11187 bytes  received 2146 bytes  77024 bytes/sec
+total size is 456386  speedup is 34.23
+
+npm notice
+npm notice New major version of npm available! 10.9.4 -> 11.6.4
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+npm notice To update run: npm install -g npm@11.6.4
+npm notice
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm notice
+npm notice New major version of npm available! 10.9.4 -> 11.6.4
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+npm notice To update run: npm install -g npm@11.6.4
+npm notice
+make -C js-libp2p/v2.8/.
+make[1]: Entering directory '/root/impl/js-libp2p/v2.8'
+docker run --rm -v "/root/impl/js-libp2p/v2.8":/usr/src/myapp -w /usr/src/myapp node:22-alpine npm ci
+
+added 93 packages, and audited 94 packages in 3s
+
+15 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+make[1]: Leaving directory '/root/impl/js-libp2p/v2.8'
+make -C js-libp2p/webrtc-node-datachannel/.
+make[1]: Entering directory '/root/impl/js-libp2p/webrtc-node-datachannel'
+docker run --rm -v "/root/impl/js-libp2p/webrtc-node-datachannel":/usr/src/myapp -w /usr/src/myapp node:22-alpine npm ci
+
+added 474 packages, and audited 475 packages in 15s
+
+48 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+make[1]: Leaving directory '/root/impl/js-libp2p/webrtc-node-datachannel'
+make -C js-libp2p/webrtc-roamhq-wrtc/.
+make[1]: Entering directory '/root/impl/js-libp2p/webrtc-roamhq-wrtc'
+Dependencies pre-installed via GitHub reference
+make[1]: Leaving directory '/root/impl/js-libp2p/webrtc-roamhq-wrtc'
+
+= Benchmark throughput/upload on versions js-libp2p, js-libp2p
+== Version js-libp2p/v2.8
+=== Starting server js-libp2p/v2.8
+bash: line 1: kill: (21651) - No such process
+
+
+=== Starting client js-libp2p/v2.8/tcp
+== Version js-libp2p/webrtc-roamhq-wrtc
+=== Starting server js-libp2p/webrtc-roamhq-wrtc
+
+
+=== Waiting for WebRTC Direct server listen address...
+Failed to extract listen address from server log. Output: ./impl/js-libp2p/webrtc-roamhq-wrtc/perf: line 6: kill: (22205) - No such process
+/Users/nandi/test-plans/perf/runner/src/index.ts:277
+        throw new Error('Could not find WebRTC Direct listen address in server log');
+              ^
+Error: Could not find WebRTC Direct listen address in server log
+    at getWebRTCDirectListenAddr (/Users/nandi/test-plans/perf/runner/src/index.ts:277:15)
+    at runBenchmarkAcrossVersions (/Users/nandi/test-plans/perf/runner/src/index.ts:168:36)
+    at main (/Users/nandi/test-plans/perf/runner/src/index.ts:35:9)
+    at Object.<anonymous> (/Users/nandi/test-plans/perf/runner/src/index.ts:323:1)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Module.m._compile (/Users/nandi/test-plans/perf/runner/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1839:10
+    at Object.require.extensions.<computed> [as .ts] (/Users/nandi/test-plans/perf/runner/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)

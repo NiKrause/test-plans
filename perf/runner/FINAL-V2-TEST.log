@@ -1,0 +1,14 @@
+
+> runner@1.0.0 start
+> ts-node src/index.ts --client-public-ip 46.224.73.91 --server-public-ip 188.245.187.195 --test-filter js-libp2p --testing
+
+= Starting benchmark with 1 iterations on implementations js-libp2p
+= run 1 pings from client to server
+= run 1 iPerf TCP from client to server
+cat: pidfile: No such file or directory
+kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]
+rm: cannot remove 'pidfile': No such file or directory
+rm: cannot remove 'server.log': No such file or directory
+
+Connection closed by 188.245.187.195 port 22
+Command failed: ssh -o StrictHostKeyChecking=no root@188.245.187.195 'nohup iperf3 -s > server.log 2>&1 & echo $! > pidfile '
