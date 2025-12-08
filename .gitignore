@@ -52,3 +52,15 @@ dist
 downloads/
 
 .nvim
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Benchmark temporary files
+perf/runner/benchmark-results-*.json
+perf/runner/*.log
+
+# Lock files for perf implementations
+perf/impl/**/pnpm-lock.yaml

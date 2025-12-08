@@ -4,7 +4,9 @@ DOCKER_RUN := docker run --rm -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp
 all: perf
 
 perf:
-	$(DOCKER_RUN) npm ci
+	npm install /tmp/js-libp2p-fork/packages/transport-webrtc /tmp/js-libp2p-fork/packages/libp2p
+	npm install
+	npm add -D tsx
 
 clean:
 	rm -rf node_modules

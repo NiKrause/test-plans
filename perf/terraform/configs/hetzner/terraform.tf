@@ -41,9 +41,13 @@ resource "hcloud_server" "server" {
       # Install Node.js 22
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
+      # Install pnpm globally
+      - npm install -g pnpm
       # Setup ec2-user equivalent (ubuntu user already exists)
       - echo "Node.js version:" > /home/ubuntu/setup.log
       - node --version >> /home/ubuntu/setup.log
+      - echo "pnpm version:" >> /home/ubuntu/setup.log
+      - pnpm --version >> /home/ubuntu/setup.log
       - chown ubuntu:ubuntu /home/ubuntu/setup.log
   EOF
 
@@ -75,8 +79,12 @@ resource "hcloud_server" "client" {
       # Install Node.js 22
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
+      # Install pnpm globally
+      - npm install -g pnpm
       - echo "Node.js version:" > /home/ubuntu/setup.log
       - node --version >> /home/ubuntu/setup.log
+      - echo "pnpm version:" >> /home/ubuntu/setup.log
+      - pnpm --version >> /home/ubuntu/setup.log
       - chown ubuntu:ubuntu /home/ubuntu/setup.log
   EOF
 

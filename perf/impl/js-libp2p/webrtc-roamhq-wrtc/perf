@@ -7,8 +7,8 @@ cleanup() {
 }
 trap cleanup EXIT TERM
 
-# Find the path to the Node.js executable
-node_path=$(which node)
+# Find the path to tsx executable (TypeScript executor)
+tsx_path=$(dirname "$0")/node_modules/.bin/tsx
 
 run_server=false
 server_address=""
@@ -35,8 +35,8 @@ for ((i = 1; i <= $#; i++)); do
     fi
 done
 
-# Run perf
-node $(dirname "$0")/index.js --run-server=$run_server --server-address=$server_address --upload-bytes=$upload_bytes --download-bytes=$download_bytes --transport=$transport &
+# Run perf using tsx to execute TypeScript
+$tsx_path $(dirname "$0")/index.ts --run-server=$run_server --server-address=$server_address --upload-bytes=$upload_bytes --download-bytes=$download_bytes --transport=$transport &
 
 node_pid=$!
 
